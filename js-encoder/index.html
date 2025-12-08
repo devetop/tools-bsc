@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unescape Decoder and Encoder</title>
+    <!-- Memuat Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Menggunakan font Inter dan memastikan body memiliki tinggi penuh */
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background-color: #f7f9fc; /* Warna latar belakang lebih lembut */
+        }
+        /* Custom scrollbar untuk textarea */
+        textarea {
+            scrollbar-width: thin;
+            scrollbar-color: #9ca3af #f3f4f6;
+        }
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background-color: #9ca3af;
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <div class="w-full max-w-4xl bg-white shadow-2xl rounded-2xl p-6 md:p-12 border border-gray-100 transition-all duration-300">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2 text-center tracking-tight">
+            JavaScript Unescape Decoder and Encoder
+        </h1>
+        <p class="text-md text-gray-600 mb-8 text-center">
+            Encode (Amankan) dan Decode (Pulihkan) string untuk parameter URI/URL.
+        </p>
+
+        <!-- Area Input -->
+        <div class="mb-6">
+            <label for="input-text" class="block text-lg font-semibold text-gray-700 mb-3">Teks Masukan / Input</label>
+            <textarea id="input-text" rows="5" class="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-teal-500 focus:border-teal-500 transition duration-150 text-gray-800 shadow-inner resize-none" placeholder="Masukkan teks di sini. Contoh: Data Sensitif & Punya 100% Akurasi"></textarea>
+        </div>
+
+        <!-- Tombol Aksi - Penambahan Ikon SVG -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- encodeURIComponent (Direkomendasikan) -->
+            <button onclick="handleOperation('encodeURI')" class="btn-primary">
+                <span class="text-base font-extrabold block">Encode URI</span>
+                <span class="text-xs opacity-80">(Amankan)</span>
+            </button>
+            <!-- decodeURIComponent (Direkomendasikan) -->
+            <button onclick="handleOperation('decodeURI')" class="btn-secondary">
+                <span class="text-base font-extrabold block">Decode URI</span>
+                <span class="text-xs opacity-80">(Pulihkan)</span>
+            </button>
+            <!-- escape (Legacy) -->
+            <button onclick="handleOperation('escape')" class="btn-tertiary">
+                <span class="text-base font-extrabold block">Escape</span>
+                <span class="text-xs opacity-80">(Lama)</span>
+            </button>
+            <!-- unescape (Legacy) -->
+            <button onclick="handleOperation('unescape')" class="btn-quaternary">
+                <span class="text-base font-extrabold block">Unescape</span>
+                <span class="text-xs opacity-80">(Lama)</span>
+            </button>
+        </div>
+
+        <!-- Area Output -->
+        <div class="mb-8">
+            <label for="output-text" class="block text-lg font-semibold text-gray-700 mb-3">Hasil / Output</label>
+            <div class="relative">
+                <textarea id="output-text" rows="5" readonly class="w-full p-4 border-2 border-gray-200 bg-gray-50 rounded-xl text-gray-800 focus:outline-none shadow-inner resize-none"></textarea>
+                <button onclick="copyOutput()" id="copy-button" class="absolute top-2 right-2 p-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition duration-150 focus:outline-none focus:ring-4 focus:ring-sky-300 text-sm font-semibold">
+                    Salin
+                </button>
+                <div id="copy-message" class="absolute top-3 right-[5.5rem] px-3 py-1 bg-green-500 text-white text-xs rounded-full opacity-0 transition-opacity duration-300 shadow-lg pointer-events-none">
+                    Tersalin!
+                </div>
+            </div>
+        </div>
+        
+        <!-- Catatan Penting -->
+        <div class="p-5 bg-blue-50 border-l-4 border-blue-500 text-sm text-blue-800 rounded-lg shadow-md">
+            <p class="font-bold flex items-center mb-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                Rekomendasi Terbaik:
+            </p>
+            <p>Fungsi <code class="font-mono text-blue-600">encodeURIComponent</code> dan <code class="font-mono text-blue-600">decodeURIComponent</code> adalah standar modern untuk mengamankan data URL dan sangat direkomendasikan. Fungsi escape dan unescape sudah usang (deprecated).</p>
+        </div>
+    </div>
+
+    <script>
+        const inputTextarea = document.getElementById('input-text');
+        const outputTextarea = document.getElementById('output-text');
+        const copyMessage = document.getElementById('copy-message');
+
+        /**
+         * Mengimplementasikan logika encoding/decoding berdasarkan operasi yang dipilih.
+         * @param {string} operation - Jenis operasi ('encodeURI', 'decodeURI', 'escape', 'unescape').
+         */
+        function handleOperation(operation) {
+            const input = inputTextarea.value;
+            let result = '';
+
+            try {
+                switch (operation) {
+                    case 'encodeURI':
+                        // Digunakan untuk meng-encode seluruh komponen URI (misalnya parameter query)
+                        result = encodeURIComponent(input);
+                        break;
+                    case 'decodeURI':
+                        // Digunakan untuk meng-decode string yang telah di-encodeURI
+                        result = decodeURIComponent(input);
+                        break;
+                    case 'escape':
+                        // Fungsi lawas (deprecated), meng-escape karakter tertentu
+                        // @ts-ignore
+                        result = escape(input);
+                        break;
+                    case 'unescape':
+                        // Fungsi lawas (deprecated), meng-unescape string yang telah di-escape
+                        // @ts-ignore
+                        result = unescape(input);
+                        break;
+                    default:
+                        result = 'Operasi tidak dikenal.';
+                }
+            } catch (error) {
+                // Tangani kesalahan decoding (misalnya, urutan % yang tidak valid)
+                console.error("Kesalahan dalam operasi:", error);
+                // Menampilkan pesan error yang jelas di output
+                result = `[KESALAHAN DECODING] Gagal memproses input untuk operasi ${operation}. Pastikan format encoding sudah benar. Detail: ${error.message}`;
+                outputTextarea.classList.add('border-red-500');
+            }
+
+            outputTextarea.value = result;
+            if (operation.startsWith('decode') && result.startsWith('[KESALAHAN')) {
+                // Biarkan warna merah jika ada error
+            } else {
+                 outputTextarea.classList.remove('border-red-500');
+            }
+        }
+
+        /**
+         * Menyalin teks dari area output ke clipboard.
+         */
+        function copyOutput() {
+            const textToCopy = outputTextarea.value;
+            if (!textToCopy) return; // Jangan salin jika kosong
+
+            // Menggunakan execCommand('copy') sebagai fallback untuk kompatibilitas iFrame
+            const tempInput = document.createElement('textarea');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopyMessage();
+                } else {
+                    console.error("Gagal menyalin menggunakan execCommand.");
+                }
+            } catch (err) {
+                console.error("Gagal menyalin:", err);
+            }
+
+            document.body.removeChild(tempInput);
+        }
+
+        /**
+         * Menampilkan pesan "Tersalin!" sebentar.
+         */
+        function showCopyMessage() {
+            copyMessage.classList.remove('opacity-0');
+            copyMessage.classList.add('opacity-100');
+            setTimeout(() => {
+                copyMessage.classList.remove('opacity-100');
+                copyMessage.classList.add('opacity-0');
+            }, 1500);
+        }
+
+        // Definisi custom class Tailwind untuk tombol
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                .btn-base {
+                    /* Menambahkan flexbox untuk menumpuk teks secara vertikal dan menengahkan */
+                    @apply px-4 py-3 rounded-xl shadow-lg transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 focus:outline-none focus:ring-4 flex flex-col items-center justify-center text-center;
+                }
+                /* Encode (Primary - Teal) */
+                .btn-primary {
+                    @apply btn-base bg-sky-600 text-white hover:bg-sky-700 focus:ring-teal-300 shadow-teal-500/50 hover:shadow-xl;
+                }
+                button {
+                    background-color: #4CAF50;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                /* Decode (Secondary - Sky Blue) */
+                .btn-secondary {
+                    @apply btn-base bg-sky-600 text-white hover:bg-sky-700 focus:ring-sky-300 shadow-sky-500/50 hover:shadow-xl;
+                }
+                /* Escape (Tertiary - Legacy/Subdued) */
+                .btn-tertiary {
+                    @apply btn-base bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-300 shadow-inner shadow-gray-300/50;
+                }
+                /* Unescape (Quaternary - Legacy/Subdued) */
+                .btn-quaternary {
+                    @apply btn-base bg-gray-400 text-white hover:bg-gray-500 focus:ring-gray-400 shadow-gray-500/50 hover:shadow-xl;
+                }
+            </style>
+        `);
+    </script>
+</body>
+</html>

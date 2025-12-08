@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id" class="">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Konverter Unix Timestamp - Epoch Time</title>
+    <meta name="description" content="Konverter Epoch dan unix timestamp untuk pengembang. Referensi sintaks fungsi tanggal dan waktu untuk berbagai bahasa pemrograman.">
+    <meta name="keywords" content="unix, time, stamp, programming, timestamp, epoch, calculator, conversion, converter, generator">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Menggunakan font Inter untuk tampilan yang bersih dan modern */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+        /* Custom scrollbar for a cleaner look in dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; /* Darker background for scroll track */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; /* Greyish thumb */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
+    
+    <!-- Memuat Library Eksternal (jQuery dan Moment.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" xintegrity="sha512-v2CJ7UaYy4JwqLDIrZQL/Ov1rFk5L5F+c0+F3W9JbT3+8u/Q2Z6QyY5FzI1G/1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js" xintegrity="sha512-h4aRylkSgqj7n+iKz7E5X0p3bB9c4nK/72m9aE3eM/t0G6+kE4FpQ12k0J5pL5l5/7vP9u0g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- HEADER -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-400 tracking-tight">
+                <span class="inline-block transform -rotate-6 text-yellow-300">{' '}</span> Konverter Unix Timestamp
+            </h1>
+            <p class="text-xl text-gray-400 mt-2">Ubah Epoch ke Tanggal/Waktu dan sebaliknya dengan mudah.</p>
+        </header>
+
+        <!-- KARTU UTAMA - REAL-TIME & TOOL -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Blok Kiri: Konversi Timestamp ke Tanggal/Waktu -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700">
+                <h2 class="text-2xl font-bold mb-4 text-white">Timestamp ke Tanggal/Waktu</h2>
+                
+                <div class="mb-6">
+                    <label for="timestampInput" class="block text-sm font-medium text-gray-300 mb-2">Masukkan Unix Timestamp (detik):</label>
+                    <input type="number" id="timestampInput" value="" placeholder="e.g., 1704067200" 
+                           class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500 text-white transition duration-200">
+                </div>
+
+                <button onclick="convertToDateTime(document.getElementById('timestampInput').value)"
+                        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transform transition duration-300 ease-in-out hover:scale-[1.01]">
+                    KONVERSI
+                </button>
+
+                <div class="mt-6 p-4 bg-gray-700 rounded-lg border border-indigo-500">
+                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">Hasil Konversi:</h3>
+                    <div id="dateTimeResult" class="text-white text-lg font-mono break-all">Tanggal dan waktu akan muncul di sini.</div>
+                </div>
+            </div>
+
+            <!-- Blok Kanan: Konversi Tanggal/Waktu ke Timestamp -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700">
+                <h2 class="text-2xl font-bold mb-4 text-white">Tanggal/Waktu ke Timestamp</h2>
+
+                <div class="mb-4">
+                    <label for="dateTimeInput" class="block text-sm font-medium text-gray-300 mb-2">Masukkan Tanggal/Waktu (YYYY-MM-DD HH:MM:SS):</label>
+                    <input type="datetime-local" id="dateTimeInput" 
+                           class="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500 text-white transition duration-200">
+                </div>
+                
+                <!-- Tanggal & Waktu Sekarang (untuk konversi cepat) -->
+                <button onclick="convertToTimestamp(new Date().toISOString().slice(0, 16))"
+                        class="w-full py-3 mb-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transform transition duration-300 ease-in-out hover:scale-[1.01]">
+                    Konversi Waktu Saat Ini
+                </button>
+
+                <button onclick="convertToTimestamp(document.getElementById('dateTimeInput').value)"
+                        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transform transition duration-300 ease-in-out hover:scale-[1.01]">
+                    KONVERSI
+                </button>
+
+                <div class="mt-6 p-4 bg-gray-700 rounded-lg border border-indigo-500">
+                    <h3 class="text-lg font-semibold text-indigo-400 mb-2">Hasil Konversi:</h3>
+                    <div id="timestampResult" class="text-white text-lg font-mono break-all">Timestamp akan muncul di sini.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bagian Waktu Real-Time (Lebih Ditekankan) -->
+        <div class="mt-12 text-center">
+            <h2 class="text-3xl font-extrabold text-white mb-4">Waktu Saat Ini & Unix Timestamp</h2>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700 inline-block min-w-full md:min-w-[50%]">
+                <div class="text-xl font-medium text-gray-400">Tanggal/Waktu Lokal (Real-Time):</div>
+                <div id="localTime" class="text-3xl md:text-4xl font-mono font-bold text-green-400 mt-1 mb-4">Memuat...</div>
+                
+                <div class="text-xl font-medium text-gray-400">Unix Timestamp (Epoch):</div>
+                <div id="currentTime" class="text-3xl md:text-4xl font-mono font-bold text-yellow-400 mt-1">Memuat...</div>
+            </div>
+        </div>
+
+        <!-- Footer dan Informasi -->
+        <div class="mt-16 pt-8 border-t border-gray-700 text-center text-gray-500 text-sm">
+            <p>&copy;2024 Konverter Timestamp. Dibuat untuk pengembang.</p>
+        </div>
+    </div>
+
+<script>
+    // Inisialisasi input datetime-local dengan waktu saat ini (tanpa detik)
+    const now = new Date();
+    const formattedNow = moment(now).format('YYYY-MM-DDTHH:mm');
+    document.getElementById('dateTimeInput').value = formattedNow;
+
+    /**
+     * Mengubah Unix Timestamp (detik) menjadi string tanggal dan waktu lokal.
+     * @param {string} timestamp The Unix timestamp in seconds.
+     */
+    function convertToDateTime(timestamp) {
+        const timestampValue = parseInt(timestamp);
+        const resultElement = document.getElementById('dateTimeResult');
+        
+        if (isNaN(timestampValue) || timestampValue < 0) {
+            resultElement.innerHTML = `<span class="text-red-400">Error: Masukkan timestamp yang valid.</span>`;
+            return;
+        }
+
+        // Moment.js expects milliseconds for certain operations, but we use seconds here.
+        const date = moment.unix(timestampValue);
+        
+        if (date.isValid()) {
+            const resultHtml = `
+                <p><strong>Waktu Lokal:</strong> ${date.format('YYYY-MM-DD HH:mm:ss')}</p>
+                <p><strong>Zona Waktu:</strong> ${date.format('Z')} (${date.zoneName()})</p>
+                <p><strong>Format ISO 8601:</strong> ${date.toISOString()}</p>
+            `;
+            resultElement.innerHTML = resultHtml;
+            document.getElementById('timestampInput').value = timestamp; // Update input field if converted via button
+        } else {
+            resultElement.innerHTML = `<span class="text-red-400">Error: Timestamp tidak valid atau di luar jangkauan.</span>`;
+        }
+    }
+
+    /**
+     * Mengubah string tanggal dan waktu menjadi Unix Timestamp (detik).
+     * @param {string} datetimeString The date/time string (e.g., YYYY-MM-DDTHH:mm).
+     */
+    function convertToTimestamp(datetimeString) {
+        const resultElement = document.getElementById('timestampResult');
+        if (!datetimeString) {
+            resultElement.innerHTML = `<span class="text-red-400">Error: Masukkan tanggal/waktu yang valid.</span>`;
+            return;
+        }
+
+        // Moment handles the datetime-local format automatically
+        const date = moment(datetimeString);
+
+        if (date.isValid()) {
+            // Get timestamp in seconds
+            const timestamp = date.unix(); 
+            
+            const resultHtml = `
+                <p><strong>Timestamp (detik):</strong> <span class="text-yellow-400">${timestamp}</span></p>
+                <p><strong>Tanggal Konversi:</strong> ${date.format('YYYY-MM-DD HH:mm:ss')}</p>
+            `;
+            resultElement.innerHTML = resultHtml;
+        } else {
+            resultElement.innerHTML = `<span class="text-red-400">Error: Format tanggal/waktu tidak valid.</span>`;
+        }
+    }
+
+
+    /**
+     * Memperbarui tampilan waktu saat ini setiap detik.
+     */
+    function updateCurrentTime() {
+        const now = moment();
+        const currentTimeElement = document.getElementById('currentTime');
+        const localTimeElement = document.getElementById('localTime');
+
+        // Unix Timestamp in seconds
+        const unixTimestamp = now.unix();
+        
+        // Display
+        if (currentTimeElement) {
+            currentTimeElement.textContent = unixTimestamp;
+        }
+        if (localTimeElement) {
+            localTimeElement.textContent = now.format('YYYY-MM-DD HH:mm:ss Z');
+        }
+
+        // Run conversion for the current time
+        // This keeps the result section updated live when the field is empty, but we'll prioritize user input.
+        // For simplicity, we'll just keep the main display updated.
+    }
+
+    // Inisialisasi tampilan
+    updateCurrentTime();
+    // Perbarui setiap detik
+    setInterval(updateCurrentTime, 1000);
+    
+    // Konversi contoh saat halaman dimuat
+    // Gunakan timestamp saat ini sebagai nilai default untuk demonstrasi
+    const initialTimestamp = moment().unix();
+    document.getElementById('timestampInput').value = initialTimestamp;
+    convertToDateTime(initialTimestamp.toString());
+
+
+    // Listener untuk memastikan konversi terjadi saat menekan Enter di input timestamp
+    document.getElementById('timestampInput').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            convertToDateTime(this.value);
+        }
+    });
+
+</script>
+
+</body>
+</html>

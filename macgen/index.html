@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator MAC Address</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Menggunakan font Inter untuk tampilan modern */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827; /* Dark background */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151; /* Darker gray handle */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-dark': '#111827',
+                        'card-dark': '#1F2937',
+                        'accent-blue': '#3B82F6',
+                        'accent-blue-hover': '#2563EB',
+                    }
+                }
+            }
+        }
+
+        const HEX_CHARS = '0123456789ABCDEF';
+        
+        /**
+         * Mengisi sisa octet MAC Address secara acak.
+         * @param {number} count Jumlah pasangan heksadesimal (octet) yang dibutuhkan (misalnya 3 untuk sisa AA:BB:CC)
+         * @returns {string} String heksadesimal acak (misalnya: 'A1B2C3')
+         */
+        function generateRandomHex(count) {
+            let hex = '';
+            for (let i = 0; i < count * 2; i++) { // count * 2 karena setiap octet adalah 2 karakter
+                hex += HEX_CHARS.charAt(Math.floor(Math.random() * HEX_CHARS.length));
+            }
+            return hex;
+        }
+
+        /**
+         * Memformat string heksadesimal menjadi format MAC Address yang diinginkan.
+         * @param {string} hex String heksadesimal 12 karakter.
+         * @param {string} format Format pemisah ('colon', 'dash', 'none').
+         * @param {string} macCase Casing yang diinginkan ('uppercase', 'lowercase').
+         * @returns {string} MAC Address yang telah diformat.
+         */
+        function formatMAC(hex, format, macCase) {
+            let separator = '';
+            if (format === 'colon') separator = ':';
+            if (format === 'dash') separator = '-';
+
+            let formattedMac = hex.match(/.{1,2}/g).join(separator);
+            
+            return macCase === 'uppercase' ? formattedMac.toUpperCase() : formattedMac.toLowerCase();
+        }
+
+        /**
+         * Fungsi utama untuk menghasilkan MAC Address.
+         */
+        function generateMAC() {
+            const prefixInput = document.getElementById('prefix');
+            const formatSelect = document.getElementById('format');
+            const caseSelect = document.getElementById('case');
+            const resultDiv = document.getElementById('result');
+            const copyButton = document.getElementById('copyButton');
+
+            let prefix = prefixInput.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+            const format = formatSelect.value;
+            const macCase = caseSelect.value;
+            
+            // Batasi hingga 10 karakter (5 octet) untuk prefix
+            if (prefix.length > 10) {
+                prefix = prefix.substring(0, 10);
+                prefixInput.value = prefix.match(/.{1,2}/g).join(':'); // Update input field
+            }
+
+            const prefixLength = prefix.length;
+            const remainingLength = 12 - prefixLength;
+
+            if (remainingLength < 2 || remainingLength % 2 !== 0) {
+                // Pastikan prefix memiliki panjang yang valid (genap)
+                if (prefixLength % 2 !== 0) {
+                    resultDiv.innerHTML = '<p class="text-red-400 font-semibold mt-4">Kesalahan: Prefix harus memiliki panjang karakter genap.</p>';
+                } else if (remainingLength === 0) {
+                    resultDiv.innerHTML = '<p class="text-red-400 font-semibold mt-4">Kesalahan: MAC Address sudah lengkap (12 karakter).</p>';
+                } else {
+                     // Ini seharusnya tidak terjadi jika validasi prefix sudah baik
+                     resultDiv.innerHTML = '<p class="text-red-400 font-semibold mt-4">Kesalahan: Panjang MAC Address tidak valid.</p>';
+                }
+                copyButton.style.display = 'none';
+                return;
+            }
+
+            const remainingOctets = remainingLength / 2;
+            const randomHex = generateRandomHex(remainingOctets);
+            const fullHex = prefix + randomHex;
+            
+            const generatedMac = formatMAC(fullHex, format, macCase);
+
+            resultDiv.innerHTML = `
+                <p class="text-gray-400 text-sm mb-2">MAC Address yang Dihasilkan:</p>
+                <div class="bg-gray-700/50 p-3 rounded-lg shadow-inner break-all">
+                    <code id="macOutput" class="text-xl font-mono text-accent-blue">${generatedMac}</code>
+                </div>
+            `;
+            copyButton.style.display = 'block';
+            copyButton.textContent = 'Salin ke Clipboard';
+        }
+
+        /**
+         * Menyalin hasil MAC Address ke clipboard.
+         */
+        function copyToClipboard() {
+            const macOutput = document.getElementById('macOutput');
+            const copyButton = document.getElementById('copyButton');
+            if (macOutput) {
+                const textToCopy = macOutput.textContent;
+                // Menggunakan document.execCommand('copy') sebagai fallback di lingkungan iFrame
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+
+                    copyButton.textContent = 'Berhasil Disalin!';
+                    setTimeout(() => {
+                        copyButton.textContent = 'Salin ke Clipboard';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Gagal menyalin:', err);
+                    copyButton.textContent = 'Gagal Salin (Lihat Konsol)';
+                }
+            }
+        }
+
+        // Jalankan generator saat halaman dimuat untuk tampilan awal
+        window.onload = function() {
+            // Pasang event listener pada input prefix
+            const prefixInput = document.getElementById('prefix');
+            prefixInput.addEventListener('input', function(e) {
+                // Hanya izinkan karakter heksadesimal dan pemisah
+                let value = e.target.value.replace(/[^0-9A-Fa-f:]/g, '').toUpperCase();
+                
+                // Hapus pemisah yang berlebihan
+                value = value.replace(/::/g, ':');
+
+                // Otomatis tambahkan titik dua setiap 2 karakter, kecuali di akhir
+                let processedValue = '';
+                for (let i = 0; i < value.length; i++) {
+                    if (value[i] === ':') {
+                        // Jika karakter saat ini adalah :, lanjutkan
+                        processedValue += value[i];
+                    } else {
+                        // Tambahkan karakter heksa
+                        processedValue += value[i];
+                        // Jika panjangnya genap dan bukan karakter terakhir, tambahkan :
+                        if (processedValue.replace(/:/g, '').length % 2 === 0 && i !== value.length - 1 && value[i + 1] !== ':') {
+                             // Periksa apakah karakter berikutnya ada
+                            if (i + 1 < value.length && value[i + 1] !== ':') {
+                                processedValue += ':';
+                            }
+                        }
+                    }
+                }
+                
+                // Hapus : jika panjang karakter heksa (tanpa :) lebih dari 10
+                const hexOnly = processedValue.replace(/:/g, '');
+                if (hexOnly.length > 10) {
+                    processedValue = processedValue.substring(0, processedValue.length - (hexOnly.length - 10));
+                    
+                    // Rekonstruksi string terakhir
+                    let finalValue = '';
+                    let charCount = 0;
+                    for (let char of processedValue) {
+                        if (char !== ':') {
+                            if (charCount < 10) {
+                                finalValue += char;
+                                charCount++;
+                            }
+                        } else if (charCount % 2 === 0 && charCount > 0) {
+                            finalValue += char;
+                        }
+                    }
+                    e.target.value = finalValue;
+                } else {
+                    e.target.value = processedValue;
+                }
+            });
+
+            // Panggil generateMAC saat inisialisasi untuk menampilkan hasil awal
+            generateMAC();
+        }
+    </script>
+</head>
+<body class="bg-primary-dark text-white min-h-screen flex items-center justify-center p-4">
+
+    <!-- Card Container -->
+    <div class="bg-card-dark p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-xl border border-gray-700/50">
+        
+        <div class="flex items-center space-x-3 mb-6 border-b border-gray-700 pb-4">
+            <!-- Icon Sederhana -->
+            <svg class="w-8 h-8 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5-3h12m0 0l-4-4m4 4l-4 4"></path>
+            </svg>
+            <h1 class="text-3xl font-bold text-gray-100">MAC Address Generator</h1>
+        </div>
+
+        <!-- Form Kontrol -->
+        <div class="space-y-6">
+            
+            <!-- Prefix MAC Address -->
+            <div>
+                <label for="prefix" class="block text-sm font-medium text-gray-300 mb-2">Prefix MAC Address (Maks 5 Octet):</label>
+                <input 
+                    type="text" 
+                    id="prefix" 
+                    placeholder="Contoh: AA:BB:CC" 
+                    class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-accent-blue focus:border-accent-blue transition duration-150 ease-in-out"
+                    maxlength="17" 
+                    onkeyup="generateMAC()"
+                >
+                <p class="mt-1 text-xs text-gray-400">Sisanya akan diisi secara acak.</p>
+            </div>
+
+            <!-- Format dan Case (Grid Responsif) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- Format -->
+                <div>
+                    <label for="format" class="block text-sm font-medium text-gray-300 mb-2">Format MAC Address:</label>
+                    <select 
+                        id="format" 
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-accent-blue focus:border-accent-blue appearance-none transition duration-150 ease-in-out"
+                        onchange="generateMAC()"
+                    >
+                        <option value="colon">AA:BB:CC:DD:EE:FF (Kolon)</option>
+                        <option value="dash">AA-BB-CC-DD-EE-FF (Dash)</option>
+                        <option value="none">AABBCCDDEEFF (Tanpa Pemisah)</option>
+                    </select>
+                </div>
+
+                <!-- Huruf -->
+                <div>
+                    <label for="case" class="block text-sm font-medium text-gray-300 mb-2">Huruf (Casing):</label>
+                    <select 
+                        id="case" 
+                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-accent-blue focus:border-accent-blue appearance-none transition duration-150 ease-in-out"
+                        onchange="generateMAC()"
+                    >
+                        <option value="uppercase">Uppercase (Huruf Kapital)</option>
+                        <option value="lowercase">Lowercase (Huruf Kecil)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tombol Generate -->
+            <button 
+                onclick="generateMAC()"
+                class="w-full flex items-center justify-center px-6 py-3 bg-accent-blue text-white font-semibold rounded-lg shadow-lg hover:bg-accent-blue-hover focus:outline-none focus:ring-4 focus:ring-accent-blue/50 transition duration-300 transform hover:scale-[1.01]"
+            >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.836 0H20v-5m0 12h-.582M4.582 16H4v5m16.082-5h-2.542M4.582 16H6.124"></path></svg>
+                Generate MAC Address
+            </button>
+        </div>
+
+        <!-- Hasil dan Tombol Salin -->
+        <div id="result" class="mt-8 pt-4 border-t border-gray-700">
+            <!-- Hasil akan dimasukkan di sini oleh JavaScript -->
+        </div>
+
+        <button 
+            id="copyButton" 
+            onclick="copyToClipboard()" 
+            style="display: none;"
+            class="mt-4 w-full px-6 py-3 bg-gray-600 text-white font-medium rounded-lg shadow hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-600/50 transition duration-300"
+        >
+            Salin ke Clipboard
+        </button>
+
+    </div>
+</body>
+</html>

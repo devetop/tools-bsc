@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Kapasitas Disk</title>
+    <!-- Memuat Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Menggunakan font Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-lg bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+            Kalkulator Kapasitas Disk
+        </h1>
+        <p class="text-gray-500 mb-8 text-center">Hitung tambahan kapasitas disk yang diperlukan untuk mencapai target penggunaan.</p>
+
+        <!-- Formulir Input -->
+        <div class="space-y-6">
+            <!-- Kapasitas Disk Saat Ini -->
+            <div>
+                <label for="current_capacity" class="block text-sm font-medium text-gray-700 mb-1">
+                    Total Kapasitas Disk Saat Ini (GB)
+                </label>
+                <input type="number" id="current_capacity" value="60" min="1"
+                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                       placeholder="Contoh: 60">
+            </div>
+
+            <!-- Persentase Terpakai Saat Ini -->
+            <div>
+                <label for="current_usage_percent" class="block text-sm font-medium text-gray-700 mb-1">
+                    Persentase Penggunaan Saat Ini (%)
+                </label>
+                <input type="number" id="current_usage_percent" value="90" min="1" max="100"
+                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                       placeholder="Contoh: 90">
+            </div>
+
+            <!-- Persentase Target Penggunaan -->
+            <div>
+                <label for="target_usage_percent" class="block text-sm font-medium text-gray-700 mb-1">
+                    Target Persentase Penggunaan (%)
+                </label>
+                <input type="number" id="target_usage_percent" value="75" min="1" max="100"
+                       class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                       placeholder="Contoh: 75">
+            </div>
+
+            <!-- Tombol Hitung -->
+            <button id="calculate_button"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out transform hover:scale-[1.01]">
+                Hitung Kebutuhan Disk
+            </button>
+        </div>
+
+        <!-- Area Hasil -->
+        <div id="results" class="mt-8 pt-6 border-t border-gray-200 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Hasil Perhitungan</h2>
+
+            <div class="space-y-3">
+                <!-- Data Terpakai -->
+                <div class="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                    <span class="text-sm font-medium text-gray-600">Kapasitas Terpakai (Tetap)</span>
+                    <span id="used_capacity" class="text-lg font-bold text-red-700"></span>
+                </div>
+
+                <!-- Total Kapasitas Baru -->
+                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <span class="text-sm font-medium text-gray-600">Total Kapasitas Baru Diperlukan</span>
+                    <span id="new_total_capacity" class="text-lg font-bold text-blue-700"></span>
+                </div>
+
+                <!-- Tambahan Kapasitas -->
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                    <span class="text-sm font-medium text-gray-600">Tambahan Kapasitas yang Harus Dibeli</span>
+                    <span id="additional_capacity" class="text-xl font-extrabold text-green-700"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Area Pesan Kesalahan -->
+        <div id="error_message" class="mt-4 p-4 text-sm text-red-800 bg-red-100 rounded-lg hidden" role="alert">
+            <!-- Pesan kesalahan akan dimasukkan di sini -->
+        </div>
+
+    </div>
+
+    <script>
+        document.getElementById('calculate_button').addEventListener('click', calculateDiskNeeds);
+
+        function calculateDiskNeeds() {
+            // 1. Ambil nilai input
+            const currentCapacityInput = document.getElementById('current_capacity');
+            const currentUsagePercentInput = document.getElementById('current_usage_percent');
+            const targetUsagePercentInput = document.getElementById('target_usage_percent');
+
+            const totalDisk = parseFloat(currentCapacityInput.value);
+            const usedPercent = parseFloat(currentUsagePercentInput.value);
+            const targetPercent = parseFloat(targetUsagePercentInput.value);
+
+            const resultsDiv = document.getElementById('results');
+            const errorMessageDiv = document.getElementById('error_message');
+
+            // Reset tampilan
+            resultsDiv.classList.add('hidden');
+            errorMessageDiv.classList.add('hidden');
+            errorMessageDiv.textContent = '';
+
+            // 2. Validasi Input
+            if (isNaN(totalDisk) || totalDisk <= 0) {
+                errorMessageDiv.textContent = "Mohon masukkan Total Kapasitas Disk yang valid (> 0).";
+                errorMessageDiv.classList.remove('hidden');
+                currentCapacityInput.focus();
+                return;
+            }
+
+            if (isNaN(usedPercent) || usedPercent < 0 || usedPercent > 100) {
+                errorMessageDiv.textContent = "Mohon masukkan Persentase Penggunaan Saat Ini yang valid (0-100).";
+                errorMessageDiv.classList.remove('hidden');
+                currentUsagePercentInput.focus();
+                return;
+            }
+
+            if (isNaN(targetPercent) || targetPercent <= 0 || targetPercent > 100) {
+                errorMessageDiv.textContent = "Mohon masukkan Target Persentase Penggunaan yang valid (1-100).";
+                errorMessageDiv.classList.remove('hidden');
+                targetUsagePercentInput.focus();
+                return;
+            }
+
+            // Periksa apakah target lebih besar dari penggunaan saat ini (persen)
+            if (targetPercent >= usedPercent && usedPercent > 0) {
+                errorMessageDiv.textContent = "Target Persentase Penggunaan (" + targetPercent + "%) harus LEBIH KECIL dari Persentase Penggunaan Saat Ini (" + usedPercent + "%). Jika tidak, Anda tidak perlu menambah disk.";
+                errorMessageDiv.classList.remove('hidden');
+                targetUsagePercentInput.focus();
+                return;
+            }
+
+            // 3. Hitung Kapasitas Terpakai (GB)
+            // Rumus: Kapasitas Terpakai = Total Disk * (Persen Terpakai / 100)
+            const usedCapacityGB = totalDisk * (usedPercent / 100);
+
+            // 4. Hitung Total Kapasitas Baru (X GB)
+            // Rumus: X = Kapasitas Terpakai / (Target Persen / 100)
+            const newTotalCapacityGB = usedCapacityGB / (targetPercent / 100);
+
+            // 5. Hitung Tambahan Kapasitas yang Harus Dibeli
+            // Rumus: Tambahan = Total Kapasitas Baru - Total Disk Saat Ini
+            const additionalCapacityGB = newTotalCapacityGB - totalDisk;
+
+            // 6. Tampilkan Hasil
+            document.getElementById('used_capacity').textContent = usedCapacityGB.toFixed(2) + ' GB';
+            document.getElementById('new_total_capacity').textContent = newTotalCapacityGB.toFixed(2) + ' GB';
+            document.getElementById('additional_capacity').textContent = additionalCapacityGB.toFixed(2) + ' GB';
+
+            resultsDiv.classList.remove('hidden');
+
+            // Gulir ke hasil
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
